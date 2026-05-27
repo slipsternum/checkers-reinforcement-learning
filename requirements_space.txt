@@ -1,0 +1,10 @@
+# ── HF Space / API server dependencies ───────────────────────────────────────
+# Pygame is intentionally excluded (no display in a headless server).
+# huggingface_hub is included so the app can pull model checkpoints from Hub.
+
+torch>=2.0.0
+numpy>=1.24.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0.0
+huggingface_hub>=0.21.0

@@ -1,0 +1,29 @@
+# Keep the image lean — exclude everything the API doesn't need
+.git
+.DS_Store
+__pycache__
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Training / GUI files not needed at serve time
+pygame_gui.py
+self_play.py
+trainer.py
+arena.py
+main.py
+test.py
+setup_cpp.py
+mcts_fast.py
+experiment.py
+cpp/
+build/
+logs/
+
+# Don't bake in .so files from macOS; they won't run on Linux
+*.so
+
+# Large checkpoints handled via HF Hub or git-lfs;
+# comment out the next line if you DO want to bundle them in the image
+# checkpoints/

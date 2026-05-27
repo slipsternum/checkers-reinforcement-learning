@@ -1,3 +1,12 @@
+---
+title: AlphaZero Checkers API
+emoji: ♟️
+colorFrom: gray
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # checkers-reinforcement-learning
 
 for BIA Data Associate Programme
