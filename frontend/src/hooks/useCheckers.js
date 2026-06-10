@@ -49,6 +49,10 @@ export default function useCheckers() {
   const [animatingStep, setAnimatingStep] = useState(null);
   const [displayBoard, setDisplayBoard] = useState(null);
 
+  const [retryCountdown, setRetryCountdown] = useState(null);
+  const pendingAiState = useRef(null);
+  const retryTimerRef = useRef(null);
+
   const diffRef = useRef(difficulty);
   useEffect(() => { diffRef.current = difficulty; }, [difficulty]);
 
@@ -100,9 +104,20 @@ export default function useCheckers() {
     animateNextStep();
   }, []);
 
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearInterval(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    setRetryCountdown(null);
+    pendingAiState.current = null;
+  }, []);
+
   const requestAiMove = useCallback(async (state) => {
     setAiThinking(true);
     setPhase('ai_thinking');
+    setError(null);
+    clearRetryTimer();
     try {
       const data = await getMove(state, diffRef.current);
       const afterState = parseApiState(data);
@@ -123,15 +138,36 @@ export default function useCheckers() {
         }
       });
     } catch (e) {
-      setError(e.message);
-      setAiThinking(false);
-      setPhase('human_turn');
+      if (e.message === 'rate_limit') {
+        pendingAiState.current = state;
+        let remaining = e.retryAfter;
+        setRetryCountdown(remaining);
+        setError('rate_limit');
+        retryTimerRef.current = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(retryTimerRef.current);
+            retryTimerRef.current = null;
+            setRetryCountdown(null);
+            const s = pendingAiState.current;
+            pendingAiState.current = null;
+            if (s) requestAiMove(s);
+          } else {
+            setRetryCountdown(remaining);
+          }
+        }, 1000);
+      } else {
+        setError(e.message);
+        setAiThinking(false);
+        setPhase('human_turn');
+      }
     }
-  }, [animateAndApply]);
+  }, [animateAndApply, clearRetryTimer]);
 
   const startGame = useCallback(async () => {
     setPhase('loading');
     setError(null);
+    clearRetryTimer();
     setSelectedPiece(null);
     setValidMoves([]);
     setLastMove(null);
@@ -212,5 +248,6 @@ export default function useCheckers() {
     startGame,
     selectSquare,
     setDifficulty,
+    retryCountdown,
   };
 }

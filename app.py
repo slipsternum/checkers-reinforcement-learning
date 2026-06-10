@@ -20,9 +20,12 @@ from enum import Enum
 from typing import List, Optional
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from rate_limit import check_rate_limit
 
 from checkers_env import CheckersState
 from neural_network import NetworkWrapper
@@ -202,12 +205,14 @@ def legal_moves(gs: GameState):
     return _state_response(state)
 
 @app.post("/api/get_move", response_model=MoveResponse, summary="Get AI move via MCTS")
-def get_move(req: MoveRequest):
+def get_move(req: MoveRequest, request: Request):
     """
     Run MCTS on the given board state and return the chosen move together with the
     resulting board state.  Pass `difficulty` (easy/medium/hard/harder) to control
     strength. The backend maps difficulty to simulation count.
     """
+    check_rate_limit(request, "predict")
+
     state = _deserialize(req)
 
     terminal, _ = state.is_terminal()

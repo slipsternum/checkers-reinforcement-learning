@@ -40,6 +40,11 @@
   background: rgba(240, 160, 160, 0.15);
 }
 
+.error-bar.rate-limit {
+  background: #4a3a1a;
+  color: #ffd54f;
+}
+
 @media (max-width: 700px) {
   .app {
     padding: 8px;

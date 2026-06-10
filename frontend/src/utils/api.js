@@ -18,6 +18,18 @@ export async function getMove(state, difficulty = 'medium') {
       difficulty,
     }),
   });
+  if (res.status === 429) {
+    const body = await res.json().catch(() => ({}));
+    const err = new Error('rate_limit');
+    // Engine 429 carries no retry_after; fall back to the default 60s window.
+    err.retryAfter = body.retry_after ?? 60;
+    throw err;
+  }
+  // 503 = demo paused via the central kill switch (distinct from 429 "slow down").
+  if (res.status === 503) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail?.message ?? 'This demo is temporarily paused. Check back soon.');
+  }
   if (!res.ok) throw new Error(`get_move failed: ${res.status}`);
   return res.json();
 }

@@ -37,9 +37,15 @@ export default function App() {
         />
       </div>
       {game.error && (
-        <div className="error-bar">
-          <span>Connection error: {game.error}</span>
-          <button onClick={game.startGame}>Retry</button>
+        <div className={`error-bar${game.error === 'rate_limit' ? ' rate-limit' : ''}`}>
+          <span>
+            {game.error === 'rate_limit'
+              ? `Too many requests — retrying in ${game.retryCountdown ?? '…'}s`
+              : `Connection error: ${game.error}`}
+          </span>
+          {game.error !== 'rate_limit' && (
+            <button onClick={game.startGame}>Retry</button>
+          )}
         </div>
       )}
       {game.phase === 'game_over' && (

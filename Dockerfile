@@ -22,6 +22,7 @@ COPY config.py          .
 COPY checkers_env.py    .
 COPY neural_network.py  .
 COPY mcts.py            .
+COPY rate_limit.py      .
 COPY app.py             .
 
 # ── Option B: bundle model checkpoint directly ────────────────────────────────
@@ -47,6 +48,10 @@ ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
 #   MODEL_FILENAME      filename in that repo       (default: model_latest.pt)
 #   MODEL_PATH          local path fallback          (default: checkpoints/model_latest.pt)
 #   ALLOWED_ORIGINS     comma-separated CORS origins (default: *, restrict to Vercel URL)
+#   UPSTASH_REDIS_REST_URL   Upstash REST URL (rate limiting disabled if unset)
+#   UPSTASH_REDIS_REST_TOKEN Upstash REST token (short names without REST_ also work)
+#   RATE_LIMIT_MAX_REQUESTS   max requests per window per IP (default: 20)
+#   RATE_LIMIT_WINDOW_SECONDS window duration in seconds     (default: 60)
 #
 ENV MODEL_PATH="checkpoints/model_latest.pt"
 
