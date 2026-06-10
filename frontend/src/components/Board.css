@@ -1,0 +1,79 @@
+.board-container {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  aspect-ratio: 1;
+  width: min(640px, 100%);
+}
+
+/* Squares */
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  aspect-ratio: 1;
+}
+.square.light { background: #e8d5b7; }
+.square.dark  { background: #654321; }
+
+.square.selected    { background: #32cd32aa; }
+.square.destination { background: rgba(0, 180, 255, 0.3); cursor: pointer; }
+.square.last-from   { background: rgba(200, 200, 50, 0.25); }
+.square.last-to     { background: rgba(255, 255, 80, 0.30); }
+
+/* Destination dot */
+.dest-dot {
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(0, 180, 255, 0.55);
+  pointer-events: none;
+}
+
+/* Piece */
+.piece-svg {
+  width: 88%;
+  height: 88%;
+  display: block;
+}
+
+.piece-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  transition: transform 300ms ease-out, opacity 200ms ease;
+  will-change: transform;
+}
+.piece-wrap.animating {
+  z-index: 10;
+}
+.piece-wrap.captured {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.piece-wrap.clickable {
+  cursor: pointer;
+}
+.piece-wrap.clickable:hover {
+  filter: brightness(1.15);
+}
+
+/* AI thinking — pulsing border glow */
+.board-container.thinking {
+  animation: thinking-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes thinking-glow {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(255, 167, 38, 0.3), 0 0 12px rgba(255, 167, 38, 0.15); }
+  50%      { box-shadow: inset 0 0 0 3px rgba(255, 167, 38, 0.7), 0 0 24px rgba(255, 167, 38, 0.3); }
+}

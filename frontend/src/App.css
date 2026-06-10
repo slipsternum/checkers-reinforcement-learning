@@ -1,0 +1,53 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  width: 100%;
+}
+
+.game-layout {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 900px;
+  width: 100%;
+}
+
+.error-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: #5c2020;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #f0a0a0;
+}
+
+.error-bar button {
+  padding: 4px 14px;
+  border: 1px solid #f0a0a0;
+  border-radius: 6px;
+  background: transparent;
+  color: #f0a0a0;
+  cursor: pointer;
+  font-size: 13px;
+}
+.error-bar button:hover {
+  background: rgba(240, 160, 160, 0.15);
+}
+
+@media (max-width: 700px) {
+  .app {
+    padding: 8px;
+    gap: 0;
+  }
+
+  .game-layout {
+    flex-direction: column;
+    border-radius: 8px;
+  }
+}

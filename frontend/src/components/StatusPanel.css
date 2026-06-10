@@ -1,0 +1,179 @@
+.status-panel {
+  width: 260px;
+  padding: 24px 20px;
+  background: #28282d;
+  border-left: 2px solid #3a3a3f;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #ddd;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.subtitle {
+  margin: -10px 0 0;
+  font-size: 13px;
+  color: #888;
+}
+
+.status {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #333;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+}
+.status.thinking {
+  color: #ffa726;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.status.your-turn {
+  color: #81c784;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.piece-counts {
+  background: #333;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.count-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.count-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.count-dot.black { background: #1a1a1a; border: 2px solid #555; }
+.count-dot.white { background: #f0e6d2; border: 2px solid #b5a48a; }
+
+.count-nums {
+  margin-left: auto;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.info-row {
+  font-size: 13px;
+  color: #888;
+}
+
+.section-label {
+  font-size: 13px;
+  color: #aaa;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.difficulty-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.diff-btn {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #333;
+  color: #bbb;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 150ms;
+}
+.diff-btn:hover:not(:disabled) {
+  background: #444;
+  color: #fff;
+}
+.diff-btn.active {
+  background: #4a7ab5;
+  border-color: #5a8ac5;
+  color: #fff;
+}
+.diff-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.new-game-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #466d46;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms;
+}
+.new-game-btn:hover:not(:disabled) {
+  background: #548a54;
+}
+.new-game-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controls-hint {
+  margin-top: auto;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .status-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 2px solid #3a3a3f;
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .title { font-size: 18px; }
+  .subtitle { margin-top: -6px; font-size: 12px; }
+
+  .piece-counts {
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px;
+  }
+
+  .count-row { font-size: 13px; }
+  .count-nums { font-size: 12px; }
+
+  .controls-hint { display: none; }
+
+  .diff-btn {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+
+  .new-game-btn {
+    padding: 12px;
+  }
+}

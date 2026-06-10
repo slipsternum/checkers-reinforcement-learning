@@ -46,11 +46,9 @@ ENV HOME=/home/user PATH=/home/user/.local/bin:$PATH
 #   MODEL_REPO_ID       HF Hub model repo, e.g. "yourname/checkers-alphazero"
 #   MODEL_FILENAME      filename in that repo       (default: model_latest.pt)
 #   MODEL_PATH          local path fallback          (default: checkpoints/model_latest.pt)
-#   DEFAULT_SIMULATIONS MCTS sims per move           (default: 100, max capped at 800)
 #   ALLOWED_ORIGINS     comma-separated CORS origins (default: *, restrict to Vercel URL)
 #
-ENV MODEL_PATH="checkpoints/model_latest.pt" \
-    DEFAULT_SIMULATIONS="100"
+ENV MODEL_PATH="checkpoints/model_latest.pt"
 
 EXPOSE 7860
 

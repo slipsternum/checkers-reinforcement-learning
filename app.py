@@ -16,6 +16,7 @@ Model loading (in order of precedence):
 
 import os
 import logging
+from enum import Enum
 from typing import List, Optional
 
 import numpy as np
@@ -96,8 +97,20 @@ else:
         "Set MODEL_PATH or MODEL_REPO_ID env var."
     )
 
-DEFAULT_SIMULATIONS = int(os.environ.get("DEFAULT_SIMULATIONS", "100"))
 mcts_engine = MCTS(nnet)
+
+DIFFICULTY_LEVELS = {
+    "easy": 25,
+    "medium": 100,
+    "hard": 200,
+    "harder": 400,
+}
+
+class Difficulty(str, Enum):
+    easy = "easy"
+    medium = "medium"
+    hard = "hard"
+    harder = "harder"
 
 # ---------------------------------------------------------------------------
 # Pydantic schemas
@@ -110,8 +123,7 @@ class GameState(BaseModel):
     move_count: int = 0
 
 class MoveRequest(GameState):
-    simulations: int = DEFAULT_SIMULATIONS
-    temperature: float = 0.0        # 0 = deterministic (best move); >0 = stochastic
+    difficulty: Difficulty = Difficulty.medium
 
 class StateResponse(BaseModel):
     board: List[List[int]]
@@ -174,7 +186,7 @@ def health():
         "model_loaded": _model_loaded,
         "model_path": MODEL_PATH if _model_loaded else None,
         "model_repo": MODEL_REPO_ID or None,
-        "default_simulations": DEFAULT_SIMULATIONS,
+        "difficulties": DIFFICULTY_LEVELS,
     }
 
 @app.post("/api/new_game", response_model=StateResponse, summary="Start a new game")
@@ -193,8 +205,8 @@ def legal_moves(gs: GameState):
 def get_move(req: MoveRequest):
     """
     Run MCTS on the given board state and return the chosen move together with the
-    resulting board state.  Pass `simulations` to control strength (default 100).
-    Pass `temperature=0` for deterministic best move (recommended for play).
+    resulting board state.  Pass `difficulty` (easy/medium/hard/harder) to control
+    strength. The backend maps difficulty to simulation count.
     """
     state = _deserialize(req)
 
@@ -202,12 +214,12 @@ def get_move(req: MoveRequest):
     if terminal:
         raise HTTPException(status_code=400, detail="Game is already over.")
 
-    sims = max(1, min(req.simulations, 800))   # cap at 800 to avoid HF timeout
+    sims = DIFFICULTY_LEVELS[req.difficulty.value]
     action, move, _pi = mcts_engine.get_action(
         state,
-        temperature=req.temperature,
+        temperature=0.0,
         num_simulations=sims,
-        add_noise=False,   # no exploration noise during play
+        add_noise=False,
     )
 
     new_state = state.apply_move(move)
