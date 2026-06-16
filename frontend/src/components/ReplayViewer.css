@@ -1,0 +1,115 @@
+.rv-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  animation: fadeIn 300ms ease;
+  padding: 16px;
+}
+
+.rv-card {
+  background: #28282d;
+  border: 1px solid #444;
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  width: 420px;
+  max-width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: slideUp 400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.rv-title { margin: 0; font-size: 18px; font-weight: 700; color: #f0f0f0; }
+.rv-close {
+  width: 30px; height: 30px;
+  border: none; background: transparent;
+  color: #999; font-size: 24px; line-height: 1; cursor: pointer; border-radius: 8px;
+}
+.rv-close:hover { background: #3a3a42; color: #fff; }
+
+.rv-board {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rv-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 2px 6px;
+  font-size: 13.5px;
+  color: #cfcfd6;
+  font-weight: 600;
+}
+.rv-counter { color: #888; font-weight: 500; }
+
+.rv-scrub {
+  width: 100%;
+  margin: 4px 0 12px;
+  accent-color: #4a7ab5;
+  cursor: pointer;
+}
+
+.rv-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.rv-btn {
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid #45454d;
+  background: #34343b;
+  color: #e6e6e6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.rv-btn:hover { background: #3d3d45; }
+.rv-btn.play { min-width: 92px; }
+
+.rv-speeds { margin-left: auto; display: flex; gap: 4px; }
+.rv-speed {
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid #45454d;
+  background: transparent;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rv-speed.active { background: #4a7ab5; border-color: #4a7ab5; color: #fff; }
+
+.rv-download {
+  width: 100%;
+  padding: 12px;
+  border-radius: 11px;
+  border: none;
+  background: #466d46;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+.rv-download:hover { background: #548a54; }
+.rv-download:disabled { opacity: 0.7; cursor: default; }
+
+.rv-hint {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}

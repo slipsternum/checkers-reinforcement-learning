@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { newGame, getMove } from '../utils/api';
-import { nextGameState, getMovesForPiece, findMoveToDestination, WHITE, EMPTY, BLACK_MAN, BLACK_KING, WHITE_MAN, WHITE_KING } from '../utils/checkers';
+import { newGame, getMove, getLegalMoves } from '../utils/api';
+import { decodeGame } from '../utils/share';
+import {
+  nextGameState, getMovesForPiece, findMoveToDestination, countPieces,
+  WHITE, EMPTY, BLACK_MAN, BLACK_KING, WHITE_MAN, WHITE_KING,
+} from '../utils/checkers';
 
 const HUMAN_COLOR = WHITE;
 const STEP_DURATION = 300;
@@ -49,6 +53,10 @@ export default function useCheckers() {
   const [animatingStep, setAnimatingStep] = useState(null);
   const [displayBoard, setDisplayBoard] = useState(null);
 
+  // Session-local record of the game so far, for the replay timelapse. Each frame
+  // is the board *after* a move; the first frame is the starting position.
+  const [history, setHistory] = useState([]);
+
   const [retryCountdown, setRetryCountdown] = useState(null);
   const pendingAiState = useRef(null);
   const retryTimerRef = useRef(null);
@@ -66,6 +74,10 @@ export default function useCheckers() {
     setIsTerminal(s.isTerminal);
     setWinner(s.winner);
     return s;
+  }, []);
+
+  const recordFrame = useCallback((frameBoard, move, player, mc) => {
+    setHistory(h => [...h, { board: frameBoard.map(r => [...r]), move, player, moveCount: mc }]);
   }, []);
 
   const animateAndApply = useCallback((move, boardBefore, afterState, onDone) => {
@@ -122,6 +134,21 @@ export default function useCheckers() {
       const data = await getMove(state, diffRef.current);
       const afterState = parseApiState(data);
 
+      // The game already ended on the previous (human) move — the backend reports
+      // the terminal state with a null move. Nothing to animate; go to game over.
+      if (!data.move) {
+        setCurrentPlayer(afterState.currentPlayer);
+        setMoveCount(afterState.moveCount);
+        setNoProgressCount(afterState.noProgressCount);
+        setLegalMoves(afterState.legalMoves);
+        setIsTerminal(afterState.isTerminal);
+        setWinner(afterState.winner);
+        setAiThinking(false);
+        setPhase('game_over');
+        return;
+      }
+
+      const mover = state.currentPlayer;
       animateAndApply(data.move, state.board, afterState, () => {
         setCurrentPlayer(afterState.currentPlayer);
         setMoveCount(afterState.moveCount);
@@ -130,6 +157,7 @@ export default function useCheckers() {
         setIsTerminal(afterState.isTerminal);
         setWinner(afterState.winner);
         setAiThinking(false);
+        recordFrame(afterState.board, data.move, mover, afterState.moveCount);
 
         if (afterState.isTerminal) {
           setPhase('game_over');
@@ -162,10 +190,9 @@ export default function useCheckers() {
         setPhase('human_turn');
       }
     }
-  }, [animateAndApply, clearRetryTimer]);
+  }, [animateAndApply, clearRetryTimer, recordFrame]);
 
-  const startGame = useCallback(async () => {
-    setPhase('loading');
+  const resetTransient = useCallback(() => {
     setError(null);
     clearRetryTimer();
     setSelectedPiece(null);
@@ -173,10 +200,19 @@ export default function useCheckers() {
     setLastMove(null);
     setAnimatingStep(null);
     setDisplayBoard(null);
+    setIsTerminal(false);
+    setWinner(null);
+  }, [clearRetryTimer]);
+
+  const startGame = useCallback(async () => {
+    setPhase('loading');
+    resetTransient();
+    setHistory([]);
 
     try {
       const data = await newGame();
       const s = applyApiState(data);
+      setHistory([{ board: s.board.map(r => [...r]), move: null, player: s.currentPlayer, moveCount: s.moveCount }]);
 
       if (s.currentPlayer !== HUMAN_COLOR && !s.isTerminal) {
         await requestAiMove({
@@ -192,7 +228,48 @@ export default function useCheckers() {
       setError(e.message);
       setPhase('loading');
     }
-  }, [applyApiState, requestAiMove]);
+  }, [applyApiState, requestAiMove, resetTransient]);
+
+  // Resume a game encoded in a shared link. Rehydrates legal moves / terminal
+  // status from the (non-rate-limited) legal_moves endpoint. Falls back to a new
+  // game if the link is malformed so the user is never stuck.
+  const loadGame = useCallback(async (encoded) => {
+    setPhase('loading');
+    resetTransient();
+    setHistory([]);
+
+    let decoded;
+    try {
+      decoded = decodeGame(encoded);
+    } catch {
+      await startGame();
+      return;
+    }
+
+    try {
+      setDifficulty(decoded.difficulty);
+      diffRef.current = decoded.difficulty;
+      const data = await getLegalMoves(decoded);
+      const s = applyApiState(data);
+      setHistory([{ board: s.board.map(r => [...r]), move: null, player: s.currentPlayer, moveCount: s.moveCount }]);
+
+      if (s.isTerminal) {
+        setPhase('game_over');
+      } else if (s.currentPlayer !== HUMAN_COLOR) {
+        await requestAiMove({
+          board: s.board,
+          currentPlayer: s.currentPlayer,
+          moveCount: s.moveCount,
+          noProgressCount: s.noProgressCount,
+        });
+      } else {
+        setPhase('human_turn');
+      }
+    } catch (e) {
+      setError(e.message);
+      setPhase('loading');
+    }
+  }, [applyApiState, requestAiMove, resetTransient, startGame]);
 
   const selectSquare = useCallback((row, col) => {
     if (phase !== 'human_turn') return;
@@ -210,6 +287,19 @@ export default function useCheckers() {
           setCurrentPlayer(after.currentPlayer);
           setMoveCount(after.moveCount);
           setNoProgressCount(after.noProgressCount);
+          recordFrame(after.board, move, HUMAN_COLOR, after.moveCount);
+
+          // Fast-path: if the human just captured the AI's last piece, the game is
+          // over. Detect it client-side so we never POST a terminal board to
+          // get_move (which used to 400) — instant win, no network round-trip.
+          const c = countPieces(after.board);
+          if (c.blackMen + c.blackKings === 0) {
+            setLegalMoves([]);
+            setIsTerminal(true);
+            setWinner(HUMAN_COLOR);
+            setPhase('game_over');
+            return;
+          }
 
           if (after.currentPlayer !== HUMAN_COLOR) {
             requestAiMove(after);
@@ -228,7 +318,10 @@ export default function useCheckers() {
       setValidMoves([]);
     }
   }, [phase, selectedPiece, validMoves, board, currentPlayer, moveCount,
-      noProgressCount, legalMoves, animateAndApply, requestAiMove]);
+      noProgressCount, legalMoves, animateAndApply, requestAiMove, recordFrame]);
+
+  // The position that fully resumes the game elsewhere (Feature: continue on another device).
+  const shareState = { board, currentPlayer, moveCount, noProgressCount, difficulty };
 
   return {
     board: displayBoard ?? board,
@@ -245,7 +338,10 @@ export default function useCheckers() {
     difficulty,
     error,
     animatingStep,
+    history,
+    shareState,
     startGame,
+    loadGame,
     selectSquare,
     setDifficulty,
     retryCountdown,

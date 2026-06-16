@@ -137,6 +137,26 @@
   cursor: not-allowed;
 }
 
+.continue-btn {
+  padding: 9px;
+  border: 1px solid #45454d;
+  border-radius: 8px;
+  background: transparent;
+  color: #cfcfd6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.continue-btn:hover:not(:disabled) {
+  background: #34343b;
+  color: #fff;
+}
+.continue-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .controls-hint {
   margin-top: auto;
   font-size: 12px;
