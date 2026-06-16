@@ -76,7 +76,6 @@ export default function App() {
         <GameOverModal
           winner={game.winner}
           onNewGame={newGame}
-          onShare={() => setShowContinue(true)}
           onReplay={() => setShowReplay(true)}
         />
       )}

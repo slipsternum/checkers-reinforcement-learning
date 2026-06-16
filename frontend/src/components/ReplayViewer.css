@@ -92,8 +92,12 @@
 }
 .rv-speed.active { background: #4a7ab5; border-color: #4a7ab5; color: #fff; }
 
+.rv-export {
+  display: flex;
+  gap: 8px;
+}
 .rv-download {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   border-radius: 11px;
   border: none;
@@ -104,8 +108,13 @@
   cursor: pointer;
   transition: background 150ms ease;
 }
-.rv-download:hover { background: #548a54; }
+.rv-download:hover:not(:disabled) { background: #548a54; }
 .rv-download:disabled { opacity: 0.7; cursor: default; }
+
+.rv-share {
+  background: #4a7ab5;
+}
+.rv-share:hover:not(:disabled) { background: #5a8ec8; }
 
 .rv-hint {
   margin: 8px 0 0;

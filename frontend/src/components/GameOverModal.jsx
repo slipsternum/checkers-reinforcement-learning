@@ -40,7 +40,7 @@ function outcomeKey(winner) {
   return 'draw';
 }
 
-export default function GameOverModal({ winner, onNewGame, onShare, onReplay }) {
+export default function GameOverModal({ winner, onNewGame, onReplay }) {
   const key = outcomeKey(winner);
   const o = OUTCOMES[key];
   const gradient = `linear-gradient(135deg, ${o.accent}, ${o.accent2})`;
@@ -84,7 +84,6 @@ export default function GameOverModal({ winner, onNewGame, onShare, onReplay }) 
           <div className="gom-actions">
             <button className="gom-action" onClick={onNewGame}>New Game</button>
             <button className="gom-action" onClick={onReplay}>Watch Replay</button>
-            <button className="gom-action wide" onClick={onShare}>Continue on another device</button>
           </div>
         </div>
       </div>

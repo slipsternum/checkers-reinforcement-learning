@@ -120,7 +120,6 @@
   transition: background 150ms ease, color 150ms ease;
 }
 .gom-action:hover { background: #34343b; color: #fff; }
-.gom-action.wide { flex-basis: 100%; }
 
 @keyframes fadeIn {
   from { opacity: 0; }

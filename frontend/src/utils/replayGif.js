@@ -121,14 +121,17 @@ function addFrame(gif, ctx, delay) {
   gif.writeFrame(index, W, H, { palette, delay });
 }
 
+const GIF_FILENAME = 'checkers-replay.gif';
+
 /**
- * Build and trigger download of an animated GIF of the game.
+ * Build an animated GIF of the game and return it as a Blob (the caller decides
+ * whether to download or share it).
  * @param {Object} opts
  * @param {Array}  opts.history  frames of { board, move, player, moveCount }
  * @param {number} opts.winner   WHITE / BLACK / 0
  * @param {string} opts.shareUrl public URL to advertise in the outro
  */
-export async function downloadReplayGif({ history, winner, shareUrl }) {
+export async function buildReplayGifBlob({ history, winner, shareUrl }) {
   if (!history || history.length === 0) throw new Error('No game to record');
 
   const canvas = document.createElement('canvas');
@@ -165,13 +168,57 @@ export async function downloadReplayGif({ history, winner, shareUrl }) {
   addFrame(gif, ctx, 3200);
 
   gif.finish();
-  const blob = new Blob([gif.bytes()], { type: 'image/gif' });
+  return new Blob([gif.bytes()], { type: 'image/gif' });
+}
+
+/** Trigger a browser download of an already-built GIF blob. */
+export function downloadGifBlob(blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'checkers-replay.gif';
+  a.download = GIF_FILENAME;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+/** Whether this device/browser can share a GIF file via the native share sheet. */
+export function canShareGif() {
+  try {
+    const probe = new File([new Blob()], GIF_FILENAME, { type: 'image/gif' });
+    return !!navigator.canShare && navigator.canShare({ files: [probe] });
+  } catch {
+    return false;
+  }
+}
+
+/** Caption with a tone that matches the game's outcome. */
+export function replayShareCaption(winner, shareUrl) {
+  const url = shareUrl || '';
+  if (winner === WHITE) {
+    return `I just beat AlphaZero at checkers! 🎉 Think you can too? Play: ${url}`;
+  }
+  if (winner === BLACK) {
+    return `AlphaZero just beat me at checkers 🤖 Bet you can't do better — try: ${url}`;
+  }
+  return `Dead heat with AlphaZero at checkers 🤝 Can you actually beat it? ${url}`;
+}
+
+/**
+ * Share an already-built GIF blob via the native share sheet, with an
+ * outcome-aware caption. Resolves quietly if the user dismisses the sheet.
+ */
+export async function shareReplayGif(blob, { winner, shareUrl }) {
+  const file = new File([blob], GIF_FILENAME, { type: 'image/gif' });
+  try {
+    await navigator.share({
+      files: [file],
+      title: 'AlphaZero Checkers',
+      text: replayShareCaption(winner, shareUrl),
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // user cancelled — not an error
+    throw e;
+  }
 }

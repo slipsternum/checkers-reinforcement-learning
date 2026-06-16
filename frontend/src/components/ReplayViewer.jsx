@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import Board from './Board';
-import { downloadReplayGif } from '../utils/replayGif';
+import { buildReplayGifBlob, downloadGifBlob, canShareGif, shareReplayGif } from '../utils/replayGif';
 import { buildShareUrl } from '../utils/share';
 import './ReplayViewer.css';
 
@@ -20,8 +20,11 @@ export default function ReplayViewer({ history, winner, shareState, onClose }) {
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [speed, setSpeed] = useState(1);
-  const [gifState, setGifState] = useState('idle'); // idle | working | error
+  const [busy, setBusy] = useState(null);   // 'download' | 'share' | null
+  const [failed, setFailed] = useState(false);
   const timerRef = useRef(null);
+  const gifBlobRef = useRef(null);          // encode the GIF at most once, reuse for both actions
+  const [shareSupported] = useState(canShareGif);  // feature-detected once on mount
 
   const total = history.length;
   const frame = history[idx];
@@ -38,13 +41,36 @@ export default function ReplayViewer({ history, winner, shareState, onClose }) {
     else setPlaying(p => !p);
   };
 
-  const downloadGif = async () => {
-    setGifState('working');
+  const shareUrl = buildShareUrl(shareState);
+
+  const ensureBlob = async () => {
+    if (!gifBlobRef.current) {
+      gifBlobRef.current = await buildReplayGifBlob({ history, winner, shareUrl });
+    }
+    return gifBlobRef.current;
+  };
+
+  const onDownload = async () => {
+    setBusy('download');
+    setFailed(false);
     try {
-      await downloadReplayGif({ history, winner, shareUrl: buildShareUrl(shareState) });
-      setGifState('idle');
+      downloadGifBlob(await ensureBlob());
     } catch {
-      setGifState('error');
+      setFailed(true);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onShare = async () => {
+    setBusy('share');
+    setFailed(false);
+    try {
+      await shareReplayGif(await ensureBlob(), { winner, shareUrl });
+    } catch {
+      setFailed(true);
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -97,10 +123,19 @@ export default function ReplayViewer({ history, winner, shareState, onClose }) {
           </div>
         </div>
 
-        <button className="rv-download" onClick={downloadGif} disabled={gifState === 'working'}>
-          {gifState === 'working' ? 'Generating GIF…' : gifState === 'error' ? 'Failed — try again' : '⬇ Download replay GIF'}
-        </button>
-        <p className="rv-hint">Share the GIF to show off your game.</p>
+        <div className="rv-export">
+          <button className="rv-download" onClick={onDownload} disabled={busy !== null}>
+            {busy === 'download' ? 'Generating GIF…' : '⬇ Download GIF'}
+          </button>
+          {shareSupported && (
+            <button className="rv-download rv-share" onClick={onShare} disabled={busy !== null}>
+              {busy === 'share' ? 'Preparing…' : '↗ Share GIF'}
+            </button>
+          )}
+        </div>
+        <p className="rv-hint">
+          {failed ? 'Something went wrong — try again.' : 'Share the GIF to show off your game.'}
+        </p>
       </div>
     </div>
   );
