@@ -138,8 +138,10 @@ class StateResponse(BaseModel):
     winner: Optional[int]               # 1=BLACK wins, -1=WHITE wins, 0=draw, null=ongoing
 
 class MoveResponse(StateResponse):
-    move: List[List[int]]               # the move played: [[sr,sc,dr,dc], ...]
-    move_index: int                     # flattened index (src*32 + dst)
+    # `move`/`move_index` are null when the requested state is already terminal
+    # (the game ended on the caller's move) — see get_move below.
+    move: Optional[List[List[int]]] = None   # the move played: [[sr,sc,dr,dc], ...]
+    move_index: Optional[int] = None         # flattened index (src*32 + dst)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -211,13 +213,18 @@ def get_move(req: MoveRequest, request: Request):
     resulting board state.  Pass `difficulty` (easy/medium/hard/harder) to control
     strength. The backend maps difficulty to simulation count.
     """
-    check_rate_limit(request, "predict")
-
     state = _deserialize(req)
 
+    # If the game already ended on the caller's move (e.g. the human captured the
+    # AI's last piece), there is no move to make. Return the terminal state with a
+    # null move instead of a 400 so the client can show its game-over screen. This
+    # check is intentionally *before* rate limiting so a game-ending request does
+    # not consume the caller's quota.
     terminal, _ = state.is_terminal()
     if terminal:
-        raise HTTPException(status_code=400, detail="Game is already over.")
+        return _state_response(state)
+
+    check_rate_limit(request, "predict")
 
     sims = DIFFICULTY_LEVELS[req.difficulty.value]
     action, move, _pi = mcts_engine.get_action(

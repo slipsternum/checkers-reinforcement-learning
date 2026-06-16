@@ -6,6 +6,23 @@ export async function newGame() {
   return res.json();
 }
 
+// Rehydrate legal moves / terminal status for an arbitrary position. Used when
+// loading a shared game — this endpoint is not rate-limited and does not run the bot.
+export async function getLegalMoves(state) {
+  const res = await fetch(`${BASE}/api/legal_moves`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      board: state.board,
+      current_player: state.currentPlayer,
+      no_progress_count: state.noProgressCount,
+      move_count: state.moveCount,
+    }),
+  });
+  if (!res.ok) throw new Error(`legal_moves failed: ${res.status}`);
+  return res.json();
+}
+
 export async function getMove(state, difficulty = 'medium') {
   const res = await fetch(`${BASE}/api/get_move`, {
     method: 'POST',

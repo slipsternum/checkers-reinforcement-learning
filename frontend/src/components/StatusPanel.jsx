@@ -11,6 +11,7 @@ export default function StatusPanel({
   aiThinking,
   onDifficultyChange,
   onNewGame,
+  onContinue,
 }) {
   const counts = board ? countPieces(board) : null;
 
@@ -68,6 +69,15 @@ export default function StatusPanel({
 
       <button className="new-game-btn" onClick={onNewGame} disabled={aiThinking}>
         New Game
+      </button>
+
+      <button
+        className="continue-btn"
+        onClick={onContinue}
+        disabled={!board || phase === 'loading'}
+        title="Get a link / QR code to resume this game on another device"
+      >
+        Continue on another device
       </button>
 
       <div className="controls-hint">
