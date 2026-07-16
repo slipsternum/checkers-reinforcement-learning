@@ -5,8 +5,8 @@ import './GameOverModal.css';
 
 // CTA metadata, mirroring the AI Lodge SHOWCASE_PROJECTS registry pattern.
 const LINKS = {
-  joinDap: 'https://www.smubia.com/dap',
-  showcase: 'https://www.smubia.com/showcase',
+  joinDap: 'https://t.me/join_smubia_dap',
+  showcase: 'https://www.smubia.com/Projects',
   github: 'https://github.com/smubia-projects/dap-ay2526-checkers-reinforcement-learning',
 };
 
